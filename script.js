@@ -76,29 +76,37 @@ document.addEventListener("keydown", (event) => {
 const filterButtons = document.querySelectorAll(".filter-button");
 const galleryCards = document.querySelectorAll(".gallery-card");
 const galleryCount = document.querySelector("#gallery-count");
+const galleryEmpty = document.querySelector("#gallery-empty");
+
+function applyGalleryFilter(filter) {
+  let visibleCount = 0;
+
+  filterButtons.forEach((item) => {
+    const isActive = item.dataset.filter === filter;
+    item.classList.toggle("is-active", isActive);
+    item.setAttribute("aria-pressed", String(isActive));
+  });
+
+  galleryCards.forEach((card) => {
+    const isVisible = filter === "all" || card.dataset.category.split(" ").includes(filter);
+    card.hidden = !isVisible;
+    if (isVisible) visibleCount += 1;
+  });
+
+  if (galleryCount) {
+    galleryCount.textContent = `${visibleCount} ${visibleCount === 1 ? "project" : "projects"}`;
+  }
+  if (galleryEmpty) galleryEmpty.hidden = visibleCount > 0 || filter !== "carpet";
+}
 
 filterButtons.forEach((button) => {
-  button.addEventListener("click", () => {
-    const filter = button.dataset.filter;
-    let visibleCount = 0;
-
-    filterButtons.forEach((item) => {
-      const isActive = item === button;
-      item.classList.toggle("is-active", isActive);
-      item.setAttribute("aria-pressed", String(isActive));
-    });
-
-    galleryCards.forEach((card) => {
-      const isVisible = filter === "all" || card.dataset.category.split(" ").includes(filter);
-      card.hidden = !isVisible;
-      if (isVisible) visibleCount += 1;
-    });
-
-    if (galleryCount) {
-      galleryCount.textContent = `${visibleCount} ${visibleCount === 1 ? "project" : "projects"}`;
-    }
-  });
+  button.addEventListener("click", () => applyGalleryFilter(button.dataset.filter));
 });
+
+const requestedFilter = new URLSearchParams(window.location.search).get("filter");
+if (requestedFilter && [...filterButtons].some((button) => button.dataset.filter === requestedFilter)) {
+  applyGalleryFilter(requestedFilter);
+}
 
 const inquiryForm = document.querySelector("#inquiry-form");
 const formStatus = document.querySelector("#form-status");
